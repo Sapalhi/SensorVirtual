@@ -1,9 +1,10 @@
-# REPRODUÇÃO DO JOÃO GABRIEL DRUMMOND
+# REPRODUÇÃO DO TRABALHO DE JOÃO GABRIEL DRUMMOND
 # SCRIPT PYTHON UTILIZADO PARA GERAÇÃO DOS DADOS DO TREINAMENTO
 
 # Bibliotecas
 import numpy as np
 import pandas as pd
+import matplotlib.pyplot as plt
 
 # Parâmetros -----------------------------------------------------------------------------------------------------
 NUM_AMOSTRAS = 10000 # Número de amostras
@@ -40,4 +41,49 @@ df = pd.DataFrame({
 'vazao_massica': np.round(vazao_massica, 4)
 })
 df.to_csv('dataset_vazao.csv', index=False)
+
+print("-> Dados gerados e salvos em 'dataset_vazao.csv' com sucesso!")
+
+# Gráficos de Variáveis -------------------------------------------------------------------------------------------
+fig, axs = plt.subplots(1,3, figsize=(10,4))
+
+axs[0].plot(df['temperatura'], df['vazao_massica'], 'o', alpha=0.3)
+axs[0].set_title('ṁ vs T')
+axs[0].set_xlabel('T (K)')
+axs[0].set_ylabel('ṁ (kg/s)')
+
+axs[1].plot(df['pressao'], df['vazao_massica'], 'o', alpha=0.3)
+axs[1].set_title('ṁ vs Pressão de Entrada')
+axs[1].set_xlabel('P (Pa)')
+
+axs[2].plot(df['posicao_valvula'], df['vazao_massica'], 'o', alpha=0.3)
+axs[2].set_title('ṁ vs Abertura da Válvula')
+axs[2].set_xlabel('ValveApt (%)')
+axs[2].set_ylabel('ṁ (kg/s)')
+
+plt.tight_layout()
+plt.show()
+
+# Matriz de correlação ----------------------------------------------------------------
+corr = df.corr()
+
+print(corr)
+
+plt.imshow(corr, cmap='coolwarm')
+plt.colorbar()
+
+plt.xticks(range(len(corr)), corr.columns, rotation=45)
+plt.yticks(range(len(corr)), corr.columns)
+
+plt.title("Mapa de Correlação das Variáveis")
+
+plt.show()
+
+# Histograma da vazão mássica ----------------------------------------------------------------
+plt.hist(df['vazao_massica'], bins=30, color='skyblue', edgecolor='black')
+plt.title('Histograma da Vazão Mássica')
+plt.xlabel('Vazão Mássica (kg/s)')
+plt.ylabel('Frequência')
+plt.show()
+
 

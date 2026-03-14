@@ -1,0 +1,165 @@
+# PROJETO FINAL DE CURSO - RITA VITÓRIA
+# ORIENTADOR: TÚLIO CHAVES
+
+# PROCESSAMENTO DE DADOS REAIS, CRIAÇÃO, TREINAMENTO E AVALIZAÇÃO DO MODELO RNA
+
+# BIBLIOTECAS
+import os # Biblioteca para manipulação de arquivos e diretórios
+os.environ['TF_ENABLE_ONEDNN_OPTS'] = '0' # Desativa mensagens de aviso do TensorFlow
+
+import numpy as np
+import pandas as pd
+import tensorflow as tf
+import matplotlib.pyplot as plt 
+from sklearn.preprocessing import MinMaxScaler
+from sklearn.model_selection import train_test_split 
+from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score 
+
+# FIXAR SEED - Tira a aleatoriedade do sistema
+np.random.seed(42)
+tf.random.set_seed(42)
+
+# TRATAMENTO DE DADOS
+print('1. Tratamento de Dados...')
+df = pd.read_csv('ensaio1_dados_reais.csv')  # Carregamento e leitura de dados
+#print(df.shape) # Quantidade de dados: Linhas x Colunas
+#print(df.columns)
+df = df.dropna() # Remove linhas com valores nulos
+#print(df.describe()) # Estatíticas de dados por coluna
+#print(df.head()) # 5 primeiras linhas de dados
+    # Gráficos de Variáveis
+# fig, axs = plt.subplots(2,2, figsize=(8,8))
+
+# axs[0,0].plot(df['Temperature(K)'], df['Massflow(kg/s)'], 'o', alpha=0.3)
+# axs[0,0].set_title('ṁ vs T')
+# axs[0,0].set_xlabel('T (K)')
+# axs[0,0].set_ylabel('ṁ (kg/s)')
+
+# axs[0,1].plot(df['IntakeP(Pa)'], df['Massflow(kg/s)'], 'o', alpha=0.3)
+# axs[0,1].set_title('ṁ vs Pressão de Entrada')
+# axs[0,1].set_xlabel('P (Pa)')
+
+# axs[1,0].plot(df['ValveApt(%)'], df['Massflow(kg/s)'], 'o', alpha=0.3)
+# axs[1,0].set_title('ṁ vs Abertura da Válvula')
+# axs[1,0].set_xlabel('ValveApt (%)')
+# axs[1,0].set_ylabel('ṁ (kg/s)')
+
+# axs[1,1].plot(df['OutputP(Pa)'], df['Massflow(kg/s)'], 'o', alpha=0.3)
+# axs[1,1].set_title('ṁ vs Pressão de Saída')
+# axs[1,1].set_xlabel('P (Pa)')
+
+# plt.tight_layout()
+# plt.show()
+#     # Mapa de Correlação de Variáveis
+# corr = df.corr(numeric_only=True)
+# print(corr)
+
+# plt.imshow(corr, cmap='coolwarm')
+# plt.colorbar()
+# plt.xticks(range(len(corr)), corr.columns, rotation=45)
+# plt.yticks(range(len(corr)), corr.columns)
+
+# plt.title("Mapa de Correlação das Variáveis")
+# plt.show()
+#     # Histograma
+# plt.hist(df['Massflow(kg/s)'], bins=30, color='skyblue', edgecolor='black')
+# plt.title('Histograma da Vazão Mássica')
+# plt.xlabel('Vazão Mássica (kg/s)')
+# plt.ylabel('Frequência')
+# plt.show()
+
+# SEPARAÇÃO E PRÉ PROCESSAMENTO DE DADOS
+print('2. Separação de Dados...')
+X = df[['ValveApt(%)', 'Temperature(K)', 'IntakeP(Pa)', 'OutputP(Pa)']].values # Variáveis de entrada
+Y = df['Massflow(kg/s)'].values # Variável alvo - saída que se quer prever
+
+print('3. Pré-Processamento de Dados...')
+scaler = MinMaxScaler() # Cria o "objeto normalizador"
+X_scaled = scaler.fit_transform(X)  # Normaliza (coloca entre 0 e 1) os dados de entrada.
+
+# REDE NEURAL ARTIFICIAL - RNA
+X_train, X_test, Y_train, Y_test = train_test_split(X_scaled, Y, test_size=0.2, random_state=42) # Separa treino de teste
+
+print("4. Criação do Modelo...")
+    # Camadas e Neurônios (Hiperparâmetros)
+model = tf.keras.Sequential([tf.keras.layers.InputLayer(input_shape=(4,)), 
+tf.keras.layers.Dense(8, activation='relu'), 
+tf.keras.layers.Dense(16, activation='relu'),
+tf.keras.layers.Dense(1)])
+    # Aprendizadem, Perda e Métricas (Hiperparâmetros)
+model.compile(optimizer='adam', loss='mse', metrics=['mae'])
+model.summary() # Mostra um resumo da arquitetura do modelo da rede (camadas, parâmetros etc.).
+
+print("5. Treinamento do Modelo")
+history = model.fit(X_train, Y_train, epochs=400, batch_size=16, validation_split=0.2, verbose=2)
+
+print("6. Avaliação do Modelo...")
+Y_pred = model.predict(X_test) # Usa o modelo treinado para gerar previsões dos dados de teste
+
+MSE = mean_squared_error(Y_test, Y_pred)
+MAE = mean_absolute_error(Y_test, Y_pred)
+R2 = r2_score(Y_test, Y_pred)
+
+metricas = [
+    ["MSE", f"{MSE:.8f}", "0"],
+    ["MAE", f"{MAE:.6f}", "0"],
+    ["R²", f"{R2:.4f}", "1"]
+]
+colunas = ["Métrica", "Valor Obtido", "Valor Ideal"]
+
+fig, ax = plt.subplots()
+ax.axis('off')
+
+tabela = ax.table(
+    cellText=metricas,
+    colLabels=colunas,
+    loc='center'
+)
+
+tabela.scale(1,2)
+plt.show()
+
+    # HISTÓRICO DE TREINAMENTO
+history_dict = history.history # Dicionário com os dados do histórico
+history_df = pd.DataFrame(history.history) # Cria DataFrame a partir do histórico
+history_df['epoch'] = history_df.index + 1 # Adiciona uma coluna de épocas
+history_df = history_df[['epoch'] + [col for col in history_df.columns if col != 'epoch']] # Reorganiza as colunas (opcional, pra deixar epoch no início)
+
+plt.figure(figsize=(15, 4)) # Tamanho gráficos
+
+# 1️ Loss vs Epoch (Treinamento)
+plt.subplot(1, 3, 1)
+plt.plot(history_dict['loss'], label='Loss (treino)')
+plt.title('Loss vs Epoch')
+plt.xlabel('Epoch')
+plt.ylabel('Loss')
+plt.legend()
+
+# 2 Real vs Predito (Treinamento)
+plt.subplot(1, 3, 2)
+plt.plot(Y_test, Y_pred, alpha=0.3)
+plt.title('Real vs Predicto')
+plt.xlabel('Saída Real (Y_teste)')
+plt.ylabel('Saída Predita (Y_pred) ')
+
+plt.plot([Y_test.min(), Y_test.max()], [Y_test.min(), Y_test.max()], 'r--',label='Predição Ideal') # Linha de ajuste
+plt.legend()
+
+# 3 Erro de Predição
+erro =  Y_test - Y_pred.flatten() # Calcula o erro de predição (diferença entre valor real e previsto)
+plt.subplot(1, 3, 3)
+plt.plot(erro)
+plt.title('Erro de Predição')
+plt.xlabel('Amostra')
+plt.ylabel('Erro')
+plt.axhline(0, color='m', linestyle='--') # Linha de referência para erro zero
+
+plt.tight_layout()
+plt.show()
+
+print("7. Conversão em Tensor Flow Lite...")
+converter = tf.lite.TFLiteConverter.from_keras_model(model) # Pega o model (modelo Keras treinado) e prepara-o para a conversão em TFlite.
+tflite_model = converter.convert() # Converte o modelo para o formato TensorFlow Lite (.tflite)
+with open("modelo_real_vazao.tflite", "wb") as f:  # Cria o arquivo modelo_vazao.tflite no modo de escrita binária (wb) porque o modelo convertido é binário.
+   f.write(tflite_model) # Escreve os bytes do modelo convertido no arquivo OU SEJA está pronto para ser embarcado em dispositivos com poucos recursos.
+print(" [OK] Arquivo modelo_real_vazao.tflite gerado com sucesso!")

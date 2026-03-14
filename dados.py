@@ -30,8 +30,7 @@ deltaP = pressao_res_Pa - PRESSAO_AMBIENTE_PA # Diferença de pressão (Pa) entr
 abertura_normalizada = np.random.uniform(0, 1, size=NUM_AMOSTRAS) # Grau de abertura normalizado da válvula (0 a 1)
 
 # Cálculo da vazão mássica (kg/s) utilizando a fórmula fornecida
-vazao_massica = (pressao_res_Pa/(R*temperatura_K)) * CD * AREA_MAX * \
-abertura_normalizada * np.sqrt((2 * deltaP * R * temperatura_K) / pressao_res_Pa)
+vazao_massica = (pressao_res_Pa/(R*temperatura_K)) * CD * AREA_MAX * abertura_normalizada * np.sqrt((2 * deltaP * R * temperatura_K) / pressao_res_Pa)
 
 # Salvamento dos dados em CSV -----------------------------------------------------------------------------------
 df = pd.DataFrame({

@@ -8,13 +8,13 @@
 
 // VARIÁVEIS
   // WIFI
-const char* ssid = "Sapalhi_Leptop";
-const char* password = "Jrc@222706";
+const char* ssid = "<nome_do_wifi>";
+const char* password = "<senha_do_wifi>";
 
   // MQTT
-const char* mqtt_server = "192.168.0.148";
+const char* mqtt_server = "<servidor_do_mqtt>";
 const int mqtt_port = 1883;
-const char* client_id = "literaturasale@gmail.com";
+const char* client_id = "<id_cliente>";
 const char* mqtt_topic_sub = "entrada/vazao"; // SUB = Recebe dados
 const char* mqtt_topic_pub = "saida/vazao"; // PUB = envia/publica dados
 

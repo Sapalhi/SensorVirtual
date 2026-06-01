@@ -20,10 +20,10 @@ connected_flag = False # Variável global para monitorar o status de conexão
 dados = []  # Lista para armazenar os dados coletados
 NOME_MODELO = "modelo"
 
-BROKER = "localhost"  
+BROKER = "<BROKER_IP>"  
 PORT = 1883
-CLIENT_ID = "MQTT_PC"
-
+CLIENT_ID = "<CLIENT_ID>"
+    
 TOPIC_PUB = "entrada/vazao"
 TOPIC_SUB = "saida/vazao"
 

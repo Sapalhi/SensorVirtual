@@ -13,6 +13,7 @@ import tensorflow as tf
 import matplotlib.pyplot as plt 
 
 from sklearn.tree import _tree
+from matplotlib.ticker import ScalarFormatter
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.model_selection import train_test_split
@@ -31,7 +32,7 @@ PASTA_GRAFICOS = os.path.join(PASTA_BASE, "graficos")
 os.makedirs(PASTA_RESULTADOS, exist_ok=True)
 os.makedirs(PASTA_GRAFICOS, exist_ok=True)
 
-plt.rcParams.update({'font.size': 14})
+plt.rcParams.update({'font.size': 16})
 
 # FUNÇÕES  
 # ANÁLISE AMOSTRAS
@@ -245,8 +246,8 @@ def grafico_erropredicao(Y_test, Y_pred_MLP, Y_pred_RF):
 
     plt.figure(figsize=(7,5), dpi=300)
     
-    plt.hist(erro_MLP, bins=30, alpha=0.6, color='blue', label='Erro MLP')
-    plt.hist(erro_RF, bins=30, alpha=0.6, color='red', label='Erro Random Forest')
+    plt.hist(erro_MLP, bins=12, alpha=0.6, color='blue', label='Erro MLP')
+    plt.hist(erro_RF, bins=12, alpha=0.6, color='red', label='Erro Random Forest')
     
     plt.axvline(0, color='k', linestyle='--') # Linha de referência para erro zero
     
@@ -254,7 +255,11 @@ def grafico_erropredicao(Y_test, Y_pred_MLP, Y_pred_RF):
     plt.xlabel('Erro')
     plt.ylabel('Frequência')
     plt.legend()
-    plt.grid(True)
+    plt.yscale('log')
+    
+    ax = plt.gca()
+    ax.yaxis.set_major_formatter(ScalarFormatter())
+    plt.grid(True, which="both", alpha=0.3)
 
     plt.tight_layout()
     plt.savefig(os.path.join(PASTA_GRAFICOS, f"grafico_comparativo_erropredicao.png"))
@@ -268,8 +273,8 @@ def loss(history, nome_modelo):
 
     # Curva de Aprendizado por Otimização (Treinamento)
     plt.figure(figsize=(7,5), dpi=300)
-    plt.plot(history_dict['loss'], label='Treinamento', color='blue')
-    plt.plot(history_dict['val_loss'], label='Validação de Treinamento', color='magenta', linestyle='--')
+    plt.plot(history_dict['loss'], label='Treinamento', linewidth=2, color='blue')
+    plt.plot(history_dict['val_loss'], label='Validação de Treinamento', linewidth=2, color='magenta', linestyle='--')
     
     #plt.title(f'Curva de Aprendizado - {nome_modelo}') 
     plt.xlabel('Epoca (Iteração)')
@@ -303,7 +308,7 @@ def aprendizado_RF(X_scaled_train, Y_train, X_scaled_test, Y_test, nome_modelo):
 
     # Gráfico
     plt.figure(figsize=(7,5), dpi=300)
-    plt.plot(tamanhos, r2_scores, marker='o', color='red')
+    plt.plot(tamanhos, r2_scores, marker='o', linewidth=2, color='red')
 
     #plt.title(f"Curva de Aprendizado - {nome_modelo}")
     plt.xlabel("Número de amostras de treino")

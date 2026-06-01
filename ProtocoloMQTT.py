@@ -10,6 +10,7 @@ import pandas as pd
 import paho.mqtt.client as mqtt
 import matplotlib.pyplot as plt
 
+from matplotlib.ticker import ScalarFormatter
 from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score 
 
 # CONFIGURAÇÕES INICIAIS
@@ -40,6 +41,8 @@ os.makedirs(PASTA_RESULTADOS, exist_ok=True)
 os.makedirs(PASTA_GRAFICOS, exist_ok=True)
 
 ARQUIVO_RESULTADOS = os.path.join(PASTA_RESULTADOS, f"resultados_embarcados.csv")
+
+plt.rcParams.update({'font.size': 16})
 
 # FUNÇÕES
 def on_connect(client, userdata, flags, rc): # Callback para monitorar a conexão
@@ -165,13 +168,11 @@ def main():
     mse = mean_squared_error(df_result["vazao_real"],df_result["vazao_estimada"])
 
     erro_percentual_medio = df_result["erro_pct"].mean()
-    desvio_padrao_tempo = df_result["tempo_ms"].std()
     tempo_medio = df_result["tempo_ms"].mean()
     
     # PLANILHAS
     df_metricas = pd.DataFrame([{"Modelo": modelo_nome,"R2": r2,"MAE": mae, "MSE": mse,
-    "Erro Percentual Medio (%)": erro_percentual_medio,"Desvio Padrao Tempo (ms)": desvio_padrao_tempo,
-    "Tempo Medio Inferencia (ms)": tempo_medio}])
+    "Erro Percentual Medio (%)": erro_percentual_medio,"Tempo Medio Inferencia (ms)": tempo_medio}])
     
     df_metricas.to_csv(os.path.join(PASTA_RESULTADOS,f"metricas_embarcadas_{modelo_nome}.csv"), index=False)
     print("Planilha de métricas salva!")
@@ -186,19 +187,22 @@ def main():
 
     plt.figure(figsize=(7,5), dpi=300)
 
-    plt.hist(df_result["erro_abs"], bins=20, color=cor_modelo, edgecolor="black")
+    plt.hist(df_result["erro_abs"], bins=12, color=cor_modelo, edgecolor="black")
 
     plt.axvline(media_erro_abs, color='magenta',
         linestyle='--', linewidth=2,
         label=f"Média = {media_erro_abs:.4f}"
     )
     
-    plt.xscale('log')
     plt.xlabel("Erro Absoluto")
     plt.ylabel("Frequência")
     #plt.title(f"Modelo {modelo_nome}: Histograma do Erro Absoluto")
 
     plt.legend()
+    plt.yscale('log')
+    
+    ax = plt.gca()
+    ax.yaxis.set_major_formatter(ScalarFormatter())
     plt.grid(True, which="both", alpha=0.3)
 
     plt.tight_layout()
@@ -212,11 +216,14 @@ def main():
     plt.hist(df_result["erro_pct"], bins=20, color=cor_modelo, edgecolor="black")
     plt.axvline(media_erro, color='magenta', linestyle='--', linewidth=2, label=f"Média = {media_erro:.2f}%")
 
-    plt.xscale('log')
     plt.xlabel("Erro Percentual(%)")
     plt.ylabel("Frequência")
     #plt.title(f"Modelo {modelo_nome}: Histograma do Erro Percentual")
     plt.legend()
+    plt.yscale('log')
+    
+    ax = plt.gca()
+    ax.yaxis.set_major_formatter(ScalarFormatter())
     plt.grid()
    
     plt.tight_layout()
@@ -230,14 +237,18 @@ def main():
     plt.hist(df_result["tempo_ms"], bins=15, color=cor_modelo, edgecolor="black")
     plt.axvline(media_tempo, color='magenta', linestyle='--', linewidth=2, label=f"Média = {media_tempo:.3f} ms")
              
-    plt.xscale('log')
     plt.xlabel("Tempo de Inferência (ms)")
     plt.ylabel("Frequência")
 
-
+    plt.legend()
+    plt.yscale('log')
+    
+    ax = plt.gca()
+    ax.yaxis.set_major_formatter(ScalarFormatter())
     plt.grid(True, alpha=0.3)
+    
     plt.tight_layout()
-    plt.savefig(os.path.join(PASTA_GRAFICOS,f"graficoembarcado_boxplot_tempoinferencia_{modelo_nome}.png"))
+    plt.savefig(os.path.join(PASTA_GRAFICOS,f"graficoembarcado_tempoinferencia_{modelo_nome}.png"))
     plt.close()
 
 
